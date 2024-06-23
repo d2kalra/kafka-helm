@@ -7,7 +7,7 @@ replicaCount: 1
 ## Image Info
 ## ref: https://hub.docker.com/r/confluentinc/cp-ksql-server/
 image: confluentinc/cp-ksqldb-server
-imageTag: 6.1.0
+imageTag: 7.0.2
 
 ## Specify a imagePullPolicy
 ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -22,6 +22,28 @@ servicePort: 8088
 
 ## KSQL JVM Heap Option
 heapOptions: "-Xms512M -Xmx512M"
+
+## To install UDF dependencies, set enabled to true. Currently only AWS CodeArtifact is supported
+## Format of AWS CodeArtifact assets:
+## - name: Asset name 
+##   domain: Domain Name
+##   region: Domain Region
+##   repository: Repository Name
+##   namespace: Namespace
+##   package: Package Name
+##   version: Package Version
+udfDependencies:
+  enabled: false
+  image: amazon/aws-cli
+  imageTag: 2.15.1
+  assets:
+  - name: 
+    domain: 
+    region: 
+    repository: 
+    namespace: 
+    package: 
+    version: 
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -83,12 +105,16 @@ external:
 ## Headless mode
 ## ref: https://docs.confluent.io/current/ksql/docs/installation/server-config/index.html
 ksql:
-  headless: true
+  headless: false
 
 ## You can list load balanced service endpoint, or list of all brokers (which is hard in K8s).  e.g.:
 ## bootstrapServers: "PLAINTEXT://dozing-prawn-kafka-headless:9092"
 kafka:
   bootstrapServers: ""
+  secret:
+    enabled: false
+    name: kafka-brokers
+    key: brokers
 
 ## e.g. http://gnoble-panther-cp-schema-registry:8081
 cp-schema-registry:
@@ -96,5 +122,7 @@ cp-schema-registry:
 
 # KSQL configuration options
 ## ref: https://docs.confluent.io/current/ksql/docs/installation/server-config/config-reference.html
+# If using UDF dependencies from CodeArtifact, must include the directory in KSQL configuration
 configurationOverrides: {}
   # "ksql.streams.producer.retries": "2147483647"
+  # "ksql.extension.dir": "/opt/ksqldb-udfs/codeartifact"

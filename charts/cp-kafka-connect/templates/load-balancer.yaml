@@ -1,0 +1,33 @@
+{{- if .Values.loadbalancer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-load-balancer
+  labels:
+    app: {{ template "cp-kafka-connect.name" . }}
+    chart: {{ template "cp-kafka-connect.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+    # service.beta.kubernetes.io/aws-load-balancer-name: {{ .Release.Name }}-load-balancer
+    # service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    # service.beta.kubernetes.io/aws-load-balancer-scheme: internal # This annotation doesn't work 
+    # for some reason. aws-load-balancer-internal was deprecated for this but it was creating
+    # an external facing load balancer instead of internal. Tried with and without quotes.
+    # We are actually using the AWS cloud provider load balancer controller instead of the 
+    # AWS Load Balancer Controller. Use the above annotations if switching to the new controller.
+    # https://cloud-provider-aws.sigs.k8s.io/service_controller/
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 443
+      targetPort: 8083
+      name: https
+    - port: 80
+      targetPort: 8083
+      name: http
+  selector:
+    app: {{ template "cp-kafka-connect.name" . }}
+    release: {{ .Release.Name }}
+{{- end }}

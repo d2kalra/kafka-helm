@@ -1,0 +1,9 @@
+- job_name: "kafka"
+  static_configs:
+  - targets: 
+    - "broker_1:11001"
+    - "broker_2:11001"
+    - "broker_3:11001"
+    - "broker_1:11002"
+    - "broker_2:11002"
+    - "broker_3:11002"

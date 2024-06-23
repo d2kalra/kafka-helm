@@ -91,6 +91,10 @@ spec:
         ports:
         - containerPort: 9092
           name: kafka
+        {{- if .Values.loadbalancer.enabled }}
+        - containerPort: {{ .Values.loadbalancer.externalPort }}
+          name: kafka-external
+        {{- end }}
         {{- if .Values.prometheus.jmx.enabled }}
         - containerPort: {{ .Values.jmx.port }}
           name: jmx
@@ -128,10 +132,6 @@ spec:
           value: {{ include "cp-kafka.cp-zookeeper.service-name" . | quote }}
         - name: KAFKA_LOG_DIRS
           value: {{ include "cp-kafka.log.dirs" . | quote }}
-        - name: KAFKA_METRIC_REPORTERS
-          value: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
-        - name: CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS
-          value: {{ printf "PLAINTEXT://%s:9092" (include "cp-kafka.cp-kafka-headless.fullname" .) | quote }}
         {{- range $key, $value := .Values.configurationOverrides }}
         - name: {{ printf "KAFKA_%s" $key | replace "." "_" | upper | quote }}
           value: {{ $value | quote }}
@@ -153,7 +153,7 @@ spec:
         - -exc
         - |
           export KAFKA_BROKER_ID=${HOSTNAME##*-} && \
-          export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.{{ template "cp-kafka.fullname" . }}-headless.${POD_NAMESPACE}:9092{{ include "cp-kafka.configuration.advertised.listeners" . }} && \
+          export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.{{ template "cp-kafka.fullname" . }}-headless.${POD_NAMESPACE}:9092{{ template "cp-kafka.configuration.advertised.listeners" . }} && \
           exec /etc/confluent/docker/run
         volumeMounts:
         {{- if .Values.persistence.enabled }}

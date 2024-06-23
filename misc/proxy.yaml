@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+   name: kafka-proxy
+spec:
+  selector:
+    matchLabels:
+      app: kafka-proxy
+  replicas: 1
+  serviceName: kafka-proxy
+  template:
+    metadata:
+      labels:
+        app: kafka-proxy
+    spec:
+      hostAliases:
+      - ip: "127.0.0.1"
+        hostnames:
+        - "host.docker.internal"
+      containers:
+        - name: kafka-proxy
+          image: grepplabs/kafka-proxy:latest
+          env:
+          - name: KAFKA_BROKER_1
+            valueFrom:
+              secretKeyRef:
+                name: kafka-brokers
+                key: broker_1
+          - name: KAFKA_BROKER_2
+            valueFrom:
+              secretKeyRef:
+                name: kafka-brokers
+                key: broker_2
+          - name: KAFKA_BROKER_3
+            valueFrom:
+              secretKeyRef:
+                name: kafka-brokers
+                key: broker_3
+          args:
+            - 'server'
+            - '--log-format=json'
+            - '--bootstrap-server-mapping=$(KAFKA_BROKER_1),host.docker.internal:7000'
+            - '--bootstrap-server-mapping=$(KAFKA_BROKER_2),host.docker.internal:7001'
+            - '--bootstrap-server-mapping=$(KAFKA_BROKER_3),host.docker.internal:7002'
+            - '--proxy-request-buffer-size=32768'
+            - '--proxy-response-buffer-size=32768'
+            - '--proxy-listener-read-buffer-size=32768'
+            - '--proxy-listener-write-buffer-size=131072'
+            - '--kafka-connection-read-buffer-size=131072'
+            - '--kafka-connection-write-buffer-size=32768'
+          ports:
+          - name: metrics
+            containerPort: 9080
+          - name: kafka-0
+            containerPort: 7000
+          - name: kafka-1
+            containerPort: 7001
+          - name: kafka-2
+            containerPort: 7002
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 1000m
+      restartPolicy: Always

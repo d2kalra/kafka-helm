@@ -33,6 +33,27 @@ spec:
       {{- end }}
       {{- end }}
     spec:
+      {{- if .Values.udfDependencies.enabled }}
+      initContainers:
+        - name: install-codeartifact-dependencies
+          image: "{{ .Values.udfDependencies.image }}:{{ .Values.udfDependencies.imageTag }}"
+          volumeMounts:
+            - name: ksql-udfs
+              mountPath: /opt/ksqldb-udfs/codeartifact
+          command:
+          - sh
+          - -c
+          - |
+            export aws_account_id="$(aws sts get-caller-identity --query Account --output text)" && \
+            {{ range $i, $asset := .Values.udfDependencies.assets -}}
+            export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain {{ $asset.domain }} --domain-owner ${aws_account_id} --region {{ $asset.region }} --query authorizationToken --output text` && \
+            aws codeartifact get-package-version-asset \
+              --domain {{ $asset.domain }} --domain-owner ${aws_account_id} --repository {{ $asset.repository }} \
+              --format maven --namespace {{ $asset.namespace }} --package {{ $asset.package }} --package-version {{ $asset.version }} \
+              --asset {{ $asset.name }} /opt/ksqldb-udfs/codeartifact/{{ $asset.name }} && \
+            {{- end }}
+            echo "Successful"
+      {{- end }}
       containers:
         {{- if .Values.prometheus.jmx.enabled }}
         - name: prometheus-jmx-exporter
@@ -74,9 +95,20 @@ spec:
           - name: ksql-queries
             mountPath: /etc/ksql/queries
           {{- end }}
+          {{- if .Values.udfDependencies.enabled }}
+          - name: ksql-udfs
+            mountPath: /opt/ksqldb-udfs/codeartifact
+          {{- end }}
           env:
           - name: KSQL_BOOTSTRAP_SERVERS
+            {{- if .Values.kafka.secret.enabled -}}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.kafka.secret.name }}
+                key: {{ .Values.kafka.secret.key }}
+            {{- else -}}
             value: {{ template "cp-ksql-server.kafka.bootstrapServers" . }}
+            {{- end -}}
           - name: KSQL_KSQL_SERVICE_ID
             value: {{ template "cp-ksql-server.serviceId" . }}
           - name: KSQL_KSQL_SCHEMA_REGISTRY_URL
@@ -112,6 +144,10 @@ spec:
       - name: ksql-queries
         configMap:
           name: {{ template "cp-ksql-server.fullname" . }}-ksql-queries-configmap
+      {{- end }}
+      {{- if .Values.udfDependencies.enabled }}
+      - name: ksql-udfs
+        emptyDir: {}
       {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:

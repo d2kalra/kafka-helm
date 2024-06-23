@@ -1,0 +1,15 @@
+apiVersion: 1
+contactPoints:
+    - orgId: 1
+      name: Teams Channel
+      receivers:
+        - uid: ed0cd7a9-68c3-47b2-b9f7-e08d1176f7ef
+          type: teams
+          settings:
+            message: |-
+                Region: _\
+                [Go To Dashboard](http://localhost:3000/d/AEaSQ97my/kafka-connect)
+            sectiontitle: 'Region: _'
+            title: Failing Kafka Connectors
+            url: {{webhook_url}}
+          disableResolveMessage: false

@@ -60,10 +60,10 @@ Form the Advertised Listeners. We will use the value of nodeport.firstListenerPo
 external advertised listeners if configurationOverrides.advertised.listeners is not set.
 */}}
 {{- define "cp-kafka.configuration.advertised.listeners" }}
-{{- if (index .Values "configurationOverrides" "advertised.listeners") -}}
-{{- printf ",%s" (first (pluck "advertised.listeners" .Values.configurationOverrides)) }}
+{{- if .Values.loadbalancer.enabled -}}
+{{- printf ",EXTERNAL://kafka-${KAFKA_BROKER_ID}.%s:%s" (.Values.loadbalancer.externalDNS | toString) (.Values.loadbalancer.externalPort | toString) }}
 {{- else -}}
-{{- printf ",EXTERNAL://${HOST_IP}:$((%s + ${KAFKA_BROKER_ID}))" (.Values.nodeport.firstListenerPort | toString) }}
+{{- printf "" }}
 {{- end -}}
 {{- end -}}
 

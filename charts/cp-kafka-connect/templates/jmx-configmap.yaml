@@ -16,18 +16,49 @@ data:
     ssl: false
     whitelistObjectNames:
     - kafka.connect:type=connect-worker-metrics
+    - kafka.connect:type=connect-worker-metrics,connector=*
+    - kafka.connect:type=connect-worker-rebalance-metrics
     - kafka.connect:type=connect-metrics,client-id=*
     - kafka.connect:type=connector-task-metrics,connector=*,task=*
+    - kafka.connect:type=task-error-metrics,connector=*,task=*
+    - kafka.connect:type=sink-task-metrics,connector=*,task=*
+    - kafka.connect:type=source-task-metrics,connector=*,task=*
     rules:
     - pattern : "kafka.connect<type=connect-worker-metrics>([^:]+):"
-      name: "cp_kafka_connect_connect_worker_metrics_$1"
+      name: "kafka_connect_connect_worker_metrics_$1"
+    - pattern : "kafka.connect<type=connect-worker-metrics, connector=([^:]+)><>([^:]+)"
+      name: "kafka_connect_connect_worker_metrics_$2"
+      labels:
+        connector: $1
+    - pattern : "kafka.connect<type=connect-worker-rebalance-metrics>([^:]+):"
+      name: "kafka_connect_connect_worker_rebalance_metrics_$1"
     - pattern : "kafka.connect<type=connect-metrics, client-id=([^:]+)><>([^:]+)"
-      name: "cp_kafka_connect_connect_metrics_$1_$2"
+      name: "kafka_connect_connect_metrics_$2"
     - pattern : "kafka.connect<type=connector-task-metrics, connector=([^:]+), task=([^:]+)><>status: ([^:]+)"
-      name: "cp_kafka_connect_connect_connector_metrics"
+      name: "kafka_connect_connector_metrics"
       value: 1
       labels:
         connector: $1
         task: $2
         status: $3
+    - pattern : "kafka.connect<type=connector-task-metrics, connector=([^:]+), task=([^:]+)><>([^:]+)"
+      name: "kafka_connect_connector_task_metrics_$3"
+      labels:
+        connector: $1
+        task: $2
+    - pattern : "kafka.connect<type=task-error-metrics, connector=([^:]+), task=([^:]+)><>([^:]+)"
+      name: "kafka_connect_task_error_metrics_$3"
+      labels:
+        connector: $1
+        task: $2
+    - pattern : "kafka.connect<type=source-task-metrics, connector=([^:]+), task=([^:]+)><>([^:]+)"
+      name: "kafka_connect_source_task_metrics_$3"
+      labels:
+        connector: $1
+        task: $2
+    - pattern : "kafka.connect<type=sink-task-metrics, connector=([^:]+), task=([^:]+)><>([^:]+)"
+      name: "kafka_connect_sink_task_metrics_$3"
+      labels:
+        connector: $1
+        task: $2
 {{- end }}

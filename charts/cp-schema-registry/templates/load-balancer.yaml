@@ -1,0 +1,22 @@
+{{- if .Values.loadbalancer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "cp-schema-registry.fullname" . }}-load-balancer
+  labels:
+    app: {{ template "cp-schema-registry.name" . }}
+    chart: {{ template "cp-schema-registry.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+spec:
+  type: LoadBalancer
+  ports:
+    - name: schema-registry
+      port: {{ .Values.servicePort }}
+      targetPort: {{ .Values.servicePort }}
+  selector:
+    app: {{ template "cp-schema-registry.name" . }}
+    release: {{ .Release.Name }}
+{{- end }}

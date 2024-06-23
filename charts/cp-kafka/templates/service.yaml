@@ -10,7 +10,7 @@ metadata:
 spec:
   ports:
     - port: 9092
-      name: broker
+      name: kafka
     {{- if .Values.prometheus.jmx.enabled }}
     - port: {{ .Values.prometheus.jmx.port }}
       name: metrics

@@ -12,7 +12,10 @@ replicaCount: 1
 ## Image Info
 ## ref: https://hub.docker.com/r/confluentinc/cp-schema-registry/
 image: confluentinc/cp-schema-registry
-imageTag: 6.1.0
+imageTag: 7.0.2
+
+loadbalancer:
+  enabled: false
 
 ## Specify a imagePullPolicy
 ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -41,6 +44,10 @@ heapOptions: "-Xms512M -Xmx512M"
 ## Charts uses Kafka Coordinator Master Election: https://docs.confluent.io/current/schema-registry/docs/design.html#kafka-coordinator-master-election
 kafka:
   bootstrapServers: ""
+  secret:
+    enabled: false
+    name: kafka-brokers
+    key: brokers
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -72,10 +79,7 @@ affinity: {}
 ## Privilege and access control settings for a Pod or Container
 ## https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 securityContext:
-  runAsUser: 10001
-  runAsGroup: 10001
-  fsGroup: 10001
-  runAsNonRoot: true
+  runAsUser: 0
 
 ## Monitoring
 ## Schema Registry JMX Settings

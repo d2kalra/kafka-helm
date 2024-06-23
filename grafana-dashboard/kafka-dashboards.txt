@@ -1,0 +1,1 @@
+https://github.com/confluentinc/kafka-connect-monitoring-sandbox/blob/main/grafana/dashboards/kafka-connect-cluster.json

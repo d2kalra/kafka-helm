@@ -33,6 +33,43 @@ spec:
       {{- end }}
       {{- end }}
     spec:
+      {{- if .Values.connectorDependencies.enabled }}
+      initContainers:
+      {{- if .Values.connectorDependencies.confluent.enabled }}
+        - name: install-confluent-dependencies
+          image: "{{ .Values.connectorDependencies.confluent.image }}:{{ .Values.connectorDependencies.confluent.imageTag }}"
+          volumeMounts:
+            - name: confluent-dependencies
+              mountPath: /usr/share/confluent-hub-components
+          command: 
+          - sh
+          - -c
+          - |
+            {{ range $i, $dependency := .Values.connectorDependencies.confluent.connectors -}}
+            confluent-hub install {{ $dependency.name }}:{{ $dependency.version }} --no-prompt && \
+            {{- end }}
+            echo "Successful"
+      {{- end }}
+      {{- if .Values.connectorDependencies.codeartifact.enabled }}
+        - name: install-codeartifact-dependencies
+          image: "{{ .Values.connectorDependencies.codeartifact.image }}:{{ .Values.connectorDependencies.codeartifact.imageTag }}"
+          volumeMounts:
+            - name: codeartifact-dependencies
+              mountPath: /usr/share/codeartifact
+          command:
+          - sh
+          - -c
+          - |
+            {{ range $i, $asset := .Values.connectorDependencies.codeartifact.assets -}}
+            export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain {{ $asset.domain }} --domain-owner {{ $asset.owner }} --region {{ $asset.region }} --query authorizationToken --output text` && \
+            aws codeartifact get-package-version-asset \
+              --domain {{ $asset.domain }} --domain-owner {{ $asset.owner }} --repository {{ $asset.repository }} \
+              --format maven --namespace {{ $asset.namespace }} --package {{ $asset.package }} --package-version {{ $asset.version }} \
+              --asset {{ $asset.name }} /usr/share/codeartifact/{{ $asset.name }} && \
+            {{- end }}
+            echo "Successful"
+      {{- end }}
+      {{- end }}
       containers:
         {{- if .Values.prometheus.jmx.enabled }}
         - name: prometheus-jmx-exporter
@@ -75,7 +112,14 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: CONNECT_BOOTSTRAP_SERVERS
+              {{- if .Values.kafka.secret.enabled -}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.kafka.secret.name }}
+                  key: {{ .Values.kafka.secret.key }}
+              {{- else -}}
               value: {{ template "cp-kafka-connect.kafka.bootstrapServers" . }}
+              {{- end -}}
             - name: CONNECT_GROUP_ID
               value: {{ template "cp-kafka-connect.groupId" . }}
             - name: CONNECT_CONFIG_STORAGE_TOPIC
@@ -115,22 +159,34 @@ spec:
 {{ toYaml .Values.livenessProbe | trim | indent 12 }}
           {{- end }}
         {{- end }}
-          {{- if .Values.volumeMounts }}
           volumeMounts:
+            - name: confluent-dependencies
+              mountPath: /usr/share/confluent-hub-components
+          {{- if .Values.connectorDependencies.codeartifact.enabled }}
+            - name: codeartifact-dependencies
+              mountPath: /usr/share/codeartifact
+          {{- end }}
+          {{- if .Values.volumeMounts }}
 {{ toYaml .Values.volumeMounts | indent 10 }}
-          {{- end}}
+          {{- end }}
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 8 }}
       {{- end }}
       volumes:
+        - name: confluent-dependencies
+          emptyDir: {}
+      {{- if .Values.connectorDependencies.codeartifact.enabled }}
+        - name: codeartifact-dependencies
+          emptyDir: {}
+      {{- end }}
       {{- if .Values.volumes }}
 {{ toYaml .Values.volumes | trim | indent 6 }}
-      {{- end}}
+      {{- end }}
       {{- if .Values.prometheus.jmx.enabled }}
-      - name: jmx-config
-        configMap:
-          name: {{ template "cp-kafka-connect.fullname" . }}-jmx-configmap
+        - name: jmx-config
+          configMap:
+            name: {{ template "cp-kafka-connect.fullname" . }}-jmx-configmap
       {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:

@@ -15,7 +15,7 @@ servers: 3
 ## Images Info
 ## ref: https://hub.docker.com/r/confluentinc/cp-zookeeper/
 image: confluentinc/cp-zookeeper
-imageTag: 6.1.0
+imageTag: 7.0.2
 
 ## Specify a imagePullPolicy
 ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -70,11 +70,11 @@ persistence:
   ## production servers this number should likely be much larger.
   ##
   ## Size for Data dir, where ZooKeeper will store the in-memory database snapshots.
-  dataDirSize: 5Gi
+  dataDirSize: 1Gi
   # dataDirStorageClass: ""
 
   ## Size for data log dir, which is a dedicated log device to be used, and helps avoid competition between logging and snaphots.
-  dataLogDirSize: 5Gi
+  dataLogDirSize: 1Gi
   # dataLogDirStorageClass: ""
 
 
@@ -94,6 +94,8 @@ resources: {}
 
 ## Custom pod annotations
 podAnnotations: {}
+  # traffic.sidecar.istio.io/excludeInboundPorts: "2888,3888"
+  # traffic.sidecar.istio.io/excludeOutboundPorts: 2888,3888
 
 ## Node labels for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/

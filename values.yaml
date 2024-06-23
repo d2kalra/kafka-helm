@@ -5,7 +5,7 @@ cp-zookeeper:
   enabled: true
   servers: 3
   image: confluentinc/cp-zookeeper
-  imageTag: 6.1.0
+  imageTag: 7.0.2
   ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
   ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets:
@@ -36,6 +36,14 @@ cp-zookeeper:
   #  requests:
   #   cpu: 100m
   #   memory: 128Mi
+  
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
 
 ## ------------------------------------------------------
 ## Kafka
@@ -43,8 +51,8 @@ cp-zookeeper:
 cp-kafka:
   enabled: true
   brokers: 3
-  image: confluentinc/cp-enterprise-kafka
-  imageTag: 6.1.0
+  image: confluentinc/cp-kafka
+  imageTag: 7.0.2
   ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
   ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets:
@@ -66,6 +74,14 @@ cp-kafka:
   #   memory: 128Mi
   securityContext: 
     runAsUser: 0
+  
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
 
 ## ------------------------------------------------------
 ## Schema Registry
@@ -73,7 +89,7 @@ cp-kafka:
 cp-schema-registry:
   enabled: true
   image: confluentinc/cp-schema-registry
-  imageTag: 6.1.0
+  imageTag: 7.0.2
   ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
   ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets:
@@ -88,6 +104,24 @@ cp-schema-registry:
   #  requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+  securityContext:
+    runAsUser: 0
+  
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+  
+  kafka:
+    bootstrapServers: ""
+    secret:
+      enabled: false
+      name: kafka-brokers
+      key: brokers
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
 
 ## ------------------------------------------------------
 ## REST Proxy
@@ -95,7 +129,7 @@ cp-schema-registry:
 cp-kafka-rest:
   enabled: true
   image: confluentinc/cp-kafka-rest
-  imageTag: 6.1.0
+  imageTag: 7.0.2
   ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
   ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets:
@@ -110,6 +144,21 @@ cp-kafka-rest:
   #  requests:
   #   cpu: 100m
   #   memory: 128Mi
+  
+  cp-kafka:
+    bootstrapServers: ""
+    secret:
+      enabled: false
+      name: kafka-brokers
+      key: brokers
+  
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
 
 ## ------------------------------------------------------
 ## Kafka Connect
@@ -117,7 +166,7 @@ cp-kafka-rest:
 cp-kafka-connect:
   enabled: true
   image: confluentinc/cp-kafka-connect
-  imageTag: 6.1.0
+  imageTag: 7.0.2
   ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
   ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets:
@@ -132,14 +181,70 @@ cp-kafka-connect:
   #  requests:
   #   cpu: 100m
   #   memory: 128Mi
+  
+  overrideGroupId: ""
+  
+  ## To install connector dependencies, set enabled to true. 
+  ## Format of confluent hub connectors:
+  ## connectors:
+  ## - name: Connector Name
+  ##   version: Connector Version
+  ##
+  ## Format of AWS CodeArtifact assets:
+  ## - name: Asset name 
+  ##   domain: Domain Name
+  ##   region: Domain Region
+  ##   repository: Repository Name
+  ##   namespace: Namespace
+  ##   package: Package Name
+  ##   version: Package Version
+  connectorDependencies:
+    enabled: false
+    confluent:
+      enabled: false
+      image: confluentinc/cp-kafka-connect
+      imageTag: 7.0.2
+      connectors:
+      - name: confluentinc/kafka-connect-s3
+        version: 10.0.7
+    codeartifact:
+      enabled: false
+      image: amazon/aws-cli
+      imageTag: 2.15.1
+      assets:
+      - name: 
+        domain: 
+        region: 
+        repository: 
+        namespace: 
+        package: 
+        version: 
+
+  loadbalancer:
+    enabled: false
+  
+  kafka:
+    bootstrapServers: ""
+    secret:
+      enabled: false
+      name: kafka-brokers
+      key: brokers
+  
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
 
 ## ------------------------------------------------------
 ## KSQL Server
 ## ------------------------------------------------------
 cp-ksql-server:
-  enabled: true
-  image: confluentinc/cp-ksqldb-server
-  imageTag: 6.1.0
+  enabled: false
+  image: confluentinc/ksqldb-server
+  imageTag: 0.29.0
   ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
   ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets:
@@ -147,25 +252,45 @@ cp-ksql-server:
   heapOptions: "-Xms512M -Xmx512M"
   ksql:
     headless: false
+  
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
 
-## ------------------------------------------------------
-## Control Center
-## ------------------------------------------------------
-cp-control-center:
-  enabled: true
-  image: confluentinc/cp-enterprise-control-center
-  imageTag: 6.1.0
-  ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
-  ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
-  imagePullSecrets:
-  #  - name: "regcred"
-  heapOptions: "-Xms512M -Xmx512M"
-  resources: {}
-  ## If you do want to specify resources, uncomment the following lines, adjust them as necessary,
-  ## and remove the curly braces after 'resources:'
-  #  limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  #  requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+  ## To install UDF dependencies, set enabled to true. Currently only AWS CodeArtifact is supported
+  ## Format of AWS CodeArtifact assets:
+  ## - name: Asset name 
+  ##   domain: Domain Name
+  ##   region: Domain Region
+  ##   repository: Repository Name
+  ##   namespace: Namespace
+  ##   package: Package Name
+  ##   version: Package Version
+  udfDependencies:
+    enabled: false
+    image: amazon/aws-cli
+    imageTag: 2.15.1
+    assets:
+    - name: 
+      domain: 
+      region: 
+      repository: 
+      namespace: 
+      package: 
+      version: ""
+  
+  kafka:
+    bootstrapServers: ""
+    secret:
+      enabled: false
+      name: kafka-brokers
+      key: brokers
+  
+  # If using UDF dependencies from CodeArtifact, must include the directory in KSQL configuration
+  configurationOverrides:
+    "ksql.streams.auto.offset.reset": "earliest"
+    # "ksql.extension.dir": "/opt/ksqldb-udfs/codeartifact"
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []

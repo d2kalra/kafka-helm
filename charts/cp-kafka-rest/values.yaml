@@ -101,3 +101,7 @@ cp-schema-registry:
 
 cp-kafka:
   bootstrapServers: ""
+  secret:
+    enabled: false
+    name: kafka-brokers
+    key: brokers

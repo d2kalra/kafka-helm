@@ -1,6 +1,4 @@
-# CP-Kafka Helm Chart (deprecated)
-
-*Deprecated*: The CP-Kafka Helm Chart is deprecated in favor of [Confluent For Kubernetes](https://docs.confluent.io/operator/current/overview.html).
+# CP-Kafka Helm Chart
 
 This chart bootstraps a cluster of Confluent Kafka
 
