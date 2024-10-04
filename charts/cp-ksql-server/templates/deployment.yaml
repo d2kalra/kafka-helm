@@ -101,14 +101,14 @@ spec:
           {{- end }}
           env:
           - name: KSQL_BOOTSTRAP_SERVERS
-            {{- if .Values.kafka.secret.enabled -}}
+            {{- if .Values.kafka.secret.enabled }}
             valueFrom:
               secretKeyRef:
                 name: {{ .Values.kafka.secret.name }}
                 key: {{ .Values.kafka.secret.key }}
-            {{- else -}}
+            {{- else }}
             value: {{ template "cp-ksql-server.kafka.bootstrapServers" . }}
-            {{- end -}}
+            {{- end }}
           - name: KSQL_KSQL_SERVICE_ID
             value: {{ template "cp-ksql-server.serviceId" . }}
           - name: KSQL_KSQL_SCHEMA_REGISTRY_URL

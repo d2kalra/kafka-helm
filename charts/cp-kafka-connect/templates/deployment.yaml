@@ -112,14 +112,14 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: CONNECT_BOOTSTRAP_SERVERS
-              {{- if .Values.kafka.secret.enabled -}}
+              {{- if .Values.kafka.secret.enabled }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.kafka.secret.name }}
                   key: {{ .Values.kafka.secret.key }}
-              {{- else -}}
+              {{- else }}
               value: {{ template "cp-kafka-connect.kafka.bootstrapServers" . }}
-              {{- end -}}
+              {{- end }}
             - name: CONNECT_GROUP_ID
               value: {{ template "cp-kafka-connect.groupId" . }}
             - name: CONNECT_CONFIG_STORAGE_TOPIC

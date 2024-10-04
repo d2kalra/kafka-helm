@@ -76,14 +76,14 @@ spec:
               fieldRef:
                 fieldPath: status.podIP
           - name: KAFKA_REST_BOOTSTRAP_SERVERS
-            {{- if .Values.cp-kafka.secret.enabled -}}
+            {{- if .Values.cp-kafka.secret.enabled }}
             valueFrom:
               secretKeyRef:
                 name: {{ .Values.cp-kafka.secret.name }}
                 key: {{ .Values.cp-kafka.secret.key }}
-            {{- else -}}
+            {{- else }}
             value: {{ template "cp-kafka-rest.kafka.bootstrapServers" . }}
-            {{- end -}}
+            {{- end }}
           - name: KAFKA_REST_SCHEMA_REGISTRY_URL
             value: {{ template "cp-kafka-rest.cp-schema-registry.service-name" . }}
           - name: KAFKAREST_HEAP_OPTS
